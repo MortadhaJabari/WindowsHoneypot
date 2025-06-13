@@ -16,10 +16,22 @@ services:
       www: "192.168.1.100"
       mail: "192.168.1.101"
   smb:
-    enabled: false
+    enabled: false  # Disabled for now, switching to FTP
     port: 1445
     shares:
       - name: "FAKESHARE"
         files:
           - "public.txt"
           - "confidential.docx"
+  ftp:
+    enabled: true
+    port: 2121
+    banner: "220 Microsoft FTP Service (Version 10.0)"
+    users:
+      - username: Administrator
+        password: admin@2024
+      - username: Guest
+        password: guest123
+    fake_files:
+      - welcome.txt
+      - secret.docx
