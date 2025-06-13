@@ -1,0 +1,25 @@
+services:
+  ssh:
+    enabled: true
+    port: 2222
+    banner: "OpenSSH_for_Windows_8.1"
+    users:
+      - username: Administrator
+        password: admin@2024
+      - username: Guest
+        password: guest123
+  dns:
+    enabled: true
+    port: 53
+    domain: "example.local"
+    fake_records:
+      www: "192.168.1.100"
+      mail: "192.168.1.101"
+  smb:
+    enabled: false
+    port: 1445
+    shares:
+      - name: "FAKESHARE"
+        files:
+          - "public.txt"
+          - "confidential.docx"

@@ -1,0 +1,41 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SSH keys
+ssh_host_key
+ssh_host_key.pub
+
+# Editor/project files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.pid
+
+# Misc
+uv.lock
+
+# Ignore fake SMB files (but keep the directory structure)
+services/smb/fakefiles/*
+!services/smb/fakefiles/.gitkeep
