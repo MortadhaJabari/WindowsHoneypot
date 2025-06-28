@@ -35,3 +35,12 @@ services:
     fake_files:
       - welcome.txt
       - secret.docx
+  web:
+    enabled: true
+    port: 8080
+    banner: "PMS Web Honeypot"
+    users:
+      - username: admin
+        password: admin123
+      - username: manager
+        password: manager2024

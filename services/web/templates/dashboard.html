@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PMS Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Welcome to the PMS Dashboard</h2>
+        <table>
+            <tr><th>ID</th><th>Product</th><th>Quantity</th><th>Status</th><th>Date/Time</th></tr>
+            {% for row in data %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <a class="logout-link" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</body>
+</html>
