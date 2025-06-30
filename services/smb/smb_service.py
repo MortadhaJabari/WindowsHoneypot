@@ -88,20 +88,50 @@ class SMBHoneypotServer(SimpleSMBServer):
         return super().doClose(connId, smbPacket, *args, **kwargs)
 
 
+smb_server_instance = None
+def set_smb_status(status):
+    import json
+    import os
+    status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../logs/service_status.json'))
+    try:
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        data['smb'] = status
+        with open(status_file, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
 async def start_smb_server(config, logger):
+    global smb_server_instance
     port = config["services"]["smb"]["port"]
     logger.info(f"SMB honeypot service is starting on port {port} using impacket...", service="smb")
     server = SMBHoneypotServer(config, logger)
+    smb_server_instance = server
+    set_smb_status("running")
     logger.info(f"SMB honeypot is now listening for external connections on port {port}.", service="smb")
     loop = asyncio.get_running_loop()
-    # Run the blocking server.start() in a thread, and allow cancellation
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor() as pool:
         try:
             await loop.run_in_executor(pool, server.start)
         except asyncio.CancelledError:
             logger.info("SMB honeypot server received cancellation. Shutting down...", service="smb")
-            # Attempt to stop the server if possible
-            if hasattr(server, 'stop'):  # impacket SimpleSMBServer does not have stop, but for future-proofing
+            set_smb_status("stopped")
+            if hasattr(server, 'stop'):
                 server.stop()
             raise
+        except Exception:
+            set_smb_status("error")
+            raise
+    set_smb_status("stopped")
+
+async def stop_smb_server():
+    global smb_server_instance
+    if smb_server_instance and hasattr(smb_server_instance, 'stop'):
+        smb_server_instance.stop()
+        smb_server_instance = None
+    set_smb_status("stopped")

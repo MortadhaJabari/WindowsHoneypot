@@ -3,6 +3,7 @@ import asyncssh
 import sys
 from services.ssh.windows_shell import WindowsShell
 from services.ssh.windows_banner import generate_banner
+import os
 
 
 class SSHHoneypotSession(asyncssh.SSHServerSession):
@@ -96,22 +97,54 @@ class SSHHoneypotServer(asyncssh.SSHServer):
     def session_requested(self):
         return SSHHoneypotSession( self.logger, self.config )
     
-  
+ssh_server_instance = None
+ssh_server_event = None
+
+def set_ssh_status(status):
+    import json
+    status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../logs/service_status.json'))
+    try:
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        data['ssh'] = status
+        with open(status_file, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        pass
 
 async def start_ssh_server(config, logger):
+    global ssh_server_instance, ssh_server_event
     port = config["services"]["ssh"]["port"]
     users = config["services"]["ssh"]["users"]
     logger.info(f"Starting SSH honeypot on port {port}...")
-
+    set_ssh_status("running")
     try:
-        await asyncssh.listen(
+        ssh_server_event = asyncio.Event()
+        ssh_server_instance = await asyncssh.listen(
             '', port,
             server_factory=lambda: SSHHoneypotServer(users, logger, config),
             server_host_keys=['ssh_host_key'],
             encoding='utf-8'
         )
         logger.info("SSH honeypot running. Press Ctrl+C to stop.", service="ssh")
-        await asyncio.Event().wait()  # Keeps the server alive
+        await ssh_server_event.wait()  # Keeps the server alive
     except (OSError, asyncssh.Error) as e:
         logger.error(f"Failed to start SSH server: {e}", service="ssh")
+        set_ssh_status("error")
+    finally:
+        set_ssh_status("stopped")
+
+async def stop_ssh_server():
+    global ssh_server_instance, ssh_server_event
+    if ssh_server_instance:
+        ssh_server_instance.close()
+        await ssh_server_instance.wait_closed()
+        ssh_server_instance = None
+    if ssh_server_event:
+        ssh_server_event.set()
+        ssh_server_event = None
+    set_ssh_status("stopped")
 

@@ -37,10 +37,17 @@ services:
       - secret.docx
   web:
     enabled: true
-    port: 8080
+    port: 7000
     banner: "PMS Web Honeypot"
     users:
       - username: admin
         password: admin123
       - username: manager
         password: manager2024
+  admin :
+    enabled: true
+    port: 8080
+    banner: "Honeypot Admin Panel"
+    users:
+      - username: admin
+        password: admin123

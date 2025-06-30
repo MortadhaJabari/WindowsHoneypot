@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Honeypot Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="admin-panel">
+        <h2>Honeypot Admin Panel</h2>
+        <p>Welcome, {{ session['admin_user'] }}!</p>
+        <h3>Service Control</h3>
+        <form method="post" action="{{ url_for('admin_services') }}">
+            {% for service, status in services.items() %}
+                <div>
+                    <label>{{ service|capitalize }}:</label>
+                    <select name="service_{{ service }}">
+                        <option value="enabled" {% if status %}selected{% endif %}>Enabled</option>
+                        <option value="disabled" {% if not status %}selected{% endif %}>Disabled</option>
+                    </select>
+                </div>
+            {% endfor %}
+            <input type="submit" value="Update Services">
+        </form>
+        <h3>Log Viewer</h3>
+        <form method="get" action="{{ url_for('admin_logs') }}">
+            <label>Select Log:</label>
+            <select name="logfile">
+                <option value="web_honeypot.log">Web</option>
+                <option value="ssh_honeypot.log">SSH</option>
+                <option value="ftp_honeypot.log">FTP</option>
+                <option value="smb_honeypot.log">SMB</option>
+                <option value="dns_honeypot.log">DNS</option>
+            </select>
+            <input type="submit" value="View Log">
+        </form>
+        {% if log_content %}
+        <div class="log-viewer">
+            <h4>Log: {{ selected_log }}</h4>
+            <pre style="max-height:400px;overflow:auto;background:#222;color:#eee;padding:12px;border-radius:6px;">{{ log_content }}</pre>
+        </div>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin_logout') }}">
+            <input type="submit" value="Logout" class="logout-link">
+        </form>
+    </div>
+</body>
+</html>

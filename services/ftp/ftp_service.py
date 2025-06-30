@@ -56,7 +56,26 @@ class FTPHoneypotHandler(FTPHandler):
         ip, port = self.remote_ip, self.remote_port
         self.log_service.info(f"FTP command: {cmd} {arg if arg else ''} from {ip}:{port} -> {resp_code} {resp}", service="ftp")
 
+ftp_server_instance = None
+ftp_server_event = None
+
+def set_ftp_status(status):
+    import json
+    status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../logs/service_status.json'))
+    try:
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        data['ftp'] = status
+        with open(status_file, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
 async def start_ftp_server(config, logger):
+    global ftp_server_instance, ftp_server_event
     port = config["services"]["ftp"]["port"]
     users = config["services"]["ftp"]["users"]
     fake_files = config["services"]["ftp"].get("fake_files", [])
@@ -80,8 +99,9 @@ async def start_ftp_server(config, logger):
     handler.authorizer = authorizer
     handler.banner = banner
     handler.log_service = logger
-
     server = FTPServer(('0.0.0.0', port), handler)
+    ftp_server_instance = server
+    set_ftp_status("running")
     logger.info(f"FTP honeypot service is starting on port {port}...", service="ftp")
     loop = asyncio.get_running_loop()
     import concurrent.futures
@@ -91,4 +111,16 @@ async def start_ftp_server(config, logger):
         except asyncio.CancelledError:
             logger.info("FTP honeypot server received cancellation. Shutting down...", service="ftp")
             server.close_all()
+            set_ftp_status("stopped")
             raise
+        except Exception:
+            set_ftp_status("error")
+            raise
+    set_ftp_status("stopped")
+
+async def stop_ftp_server():
+    global ftp_server_instance
+    if ftp_server_instance:
+        ftp_server_instance.close_all()
+        ftp_server_instance = None
+    set_ftp_status("stopped")
