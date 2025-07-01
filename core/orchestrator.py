@@ -15,13 +15,14 @@ class HoneypotOrchestrator:
         self.config = config
         self.logger = logger
         self.ssh_task = None
-        self.ssh_should_run = False
+        self.ftp_task = None
+        self.dns_task = None
+        self.smb_task = None
 
     def run(self):
         tasks = []
         # Add enabled service watchers to the asyncio task list
         if self.config["services"]["ssh"]["enabled"]:
-            self.ssh_should_run = True
             tasks.append(self.ssh_service_watcher())
         if self.config["services"]["ftp"]["enabled"]:
             tasks.append(self.ftp_service_watcher())
@@ -72,8 +73,17 @@ class HoneypotOrchestrator:
         # Run all service watcher coroutines concurrently
         await asyncio.gather(*services)
 
-    async def ssh_service_watcher(self):
-        # Watches the desired state for SSH and starts/stops the service accordingly
+
+    async def generic_service_watcher(self, service_name, desired_key, status_key, start_func, stop_func, task_attr):
+        """
+        Generic watcher for services.
+        service_name: e.g. 'ssh', 'ftp', 'dns', 'smb'
+        desired_key: e.g. 'ssh_desired'
+        status_key: e.g. 'ssh'
+        start_func: function to start the service (should be a coroutine)
+        stop_func: function to stop the service (should be a coroutine)
+        task_attr: attribute name for the asyncio task (e.g. 'ssh_task')
+        """
         import json
         status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../logs/service_status.json'))
         running = False
@@ -85,126 +95,81 @@ class HoneypotOrchestrator:
                         data = json.load(f)
                 else:
                     data = {}
-                desired = data.get('ssh_desired', 'running')
+                desired = data.get(desired_key, 'running')
             except Exception:
                 data = {}
             if desired == 'running' and not running:
-                # Start SSH server as an asyncio task
-                self.ssh_task = asyncio.create_task(
-                    ssh_service.start_ssh_server(self.config, self.logger)
-                )
+                # Start service as an asyncio task
+                task = asyncio.create_task(start_func(self.config, self.logger))
+                setattr(self, task_attr, task)
                 running = True
                 # Set status to running in status file
                 try:
-                    data['ssh'] = 'running'
+                    data[status_key] = 'running'
                     with open(status_file, 'w') as f:
                         json.dump(data, f)
                 except Exception:
                     pass
             elif desired == 'stopped' and running:
-                # Stop SSH server and update status
-                await ssh_service.stop_ssh_server()
-                if self.ssh_task:
-                    self.ssh_task.cancel()
-                    self.ssh_task = None
+                # Stop service and update status
+                await stop_func()
+                task = getattr(self, task_attr, None)
+                if task:
+                    task.cancel()
+                    setattr(self, task_attr, None)
                 running = False
                 try:
-                    data['ssh'] = 'stopped'
+                    data[status_key] = 'stopped'
                     with open(status_file, 'w') as f:
                         json.dump(data, f)
                 except Exception:
                     pass
             await asyncio.sleep(2)
 
+    # Wrappers for each service watcher
+    async def ssh_service_watcher(self):
+        from services.ssh import ssh_service
+        return await self.generic_service_watcher(
+            service_name='ssh',
+            desired_key='ssh_desired',
+            status_key='ssh',
+            start_func=ssh_service.start_ssh_server,
+            stop_func=ssh_service.stop_ssh_server,
+            task_attr='ssh_task'
+        )
+
     async def ftp_service_watcher(self):
-        # Watches the desired state for FTP and starts/stops the service accordingly
-        import json
         from services.ftp import ftp_service
-        status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../logs/service_status.json'))
-        running = False
-        while True:
-            desired = 'running'
-            try:
-                if os.path.exists(status_file):
-                    with open(status_file, 'r') as f:
-                        data = json.load(f)
-                    desired = data.get('ftp_desired', 'running')
-            except Exception:
-                pass
-            if desired == 'running' and not running:
-                # Start FTP server as an asyncio task
-                self.ftp_task = asyncio.create_task(
-                    ftp_service.start_ftp_server(self.config, self.logger)
-                )
-                running = True
-            elif desired == 'stopped' and running:
-                # Stop FTP server and update status
-                await ftp_service.stop_ftp_server()
-                if hasattr(self, 'ftp_task') and self.ftp_task:
-                    self.ftp_task.cancel()
-                    self.ftp_task = None
-                running = False
-            await asyncio.sleep(2)
+        return await self.generic_service_watcher(
+            service_name='ftp',
+            desired_key='ftp_desired',
+            status_key='ftp',
+            start_func=ftp_service.start_ftp_server,
+            stop_func=ftp_service.stop_ftp_server,
+            task_attr='ftp_task'
+        )
 
     async def dns_service_watcher(self):
-        # Watches the desired state for DNS and starts/stops the service accordingly
-        import json
         from services.dns import dns_service
-        status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../logs/service_status.json'))
-        running = False
-        while True:
-            desired = 'running'
-            try:
-                if os.path.exists(status_file):
-                    with open(status_file, 'r') as f:
-                        data = json.load(f)
-                    desired = data.get('dns_desired', 'running')
-            except Exception:
-                pass
-            if desired == 'running' and not running:
-                # Start DNS server as an asyncio task
-                self.dns_task = asyncio.create_task(
-                    dns_service.start_dns_server(self.config, self.logger)
-                )
-                running = True
-            elif desired == 'stopped' and running:
-                # Stop DNS server and update status
-                await dns_service.stop_dns_server()
-                if hasattr(self, 'dns_task') and self.dns_task:
-                    self.dns_task.cancel()
-                    self.dns_task = None
-                running = False
-            await asyncio.sleep(2)
+        return await self.generic_service_watcher(
+            service_name='dns',
+            desired_key='dns_desired',
+            status_key='dns',
+            start_func=dns_service.start_dns_server,
+            stop_func=dns_service.stop_dns_server,
+            task_attr='dns_task'
+        )
 
     async def smb_service_watcher(self):
-        # Watches the desired state for SMB and starts/stops the service accordingly
-        import json
         from services.smb import smb_service
-        status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../logs/service_status.json'))
-        running = False
-        while True:
-            desired = 'running'
-            try:
-                if os.path.exists(status_file):
-                    with open(status_file, 'r') as f:
-                        data = json.load(f)
-                    desired = data.get('smb_desired', 'running')
-            except Exception:
-                pass
-            if desired == 'running' and not running:
-                # Start SMB server as an asyncio task
-                self.smb_task = asyncio.create_task(
-                    smb_service.start_smb_server(self.config, self.logger)
-                )
-                running = True
-            elif desired == 'stopped' and running:
-                # Stop SMB server and update status
-                await smb_service.stop_smb_server()
-                if hasattr(self, 'smb_task') and self.smb_task:
-                    self.smb_task.cancel()
-                    self.smb_task = None
-                running = False
-            await asyncio.sleep(2)
+        return await self.generic_service_watcher(
+            service_name='smb',
+            desired_key='smb_desired',
+            status_key='smb',
+            start_func=smb_service.start_smb_server,
+            stop_func=smb_service.stop_smb_server,
+            task_attr='smb_task'
+        )
 
     async def web_service_watcher(self):
         # Watches the desired state for the web honeypot and blocks/unblocks access accordingly

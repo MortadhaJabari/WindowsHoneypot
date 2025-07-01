@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Product</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Add Car Cabling Product</h2>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="post">
+            <label>Reference:</label><input type="text" name="reference" required><br>
+            <label>Family:</label><input type="text" name="family" required><br>
+            <label>Product:</label><input type="text" name="product" required><br>
+            <label>Quantity:</label><input type="number" name="quantity" min="1" required><br>
+            <label>Status:</label>
+            <select name="status" required>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
+            </select><br>
+            <button type="submit">Add Product</button>
+            <a href="{{ url_for('dashboard') }}">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

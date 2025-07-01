@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Product</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Edit Car Cabling Product</h2>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="post">
+            <label>Reference:</label><input type="text" name="reference" value="{{ prod[1] }}" required><br>
+            <label>Family:</label><input type="text" name="family" value="{{ prod[2] }}" required><br>
+            <label>Product:</label><input type="text" name="product" value="{{ prod[3] }}" required><br>
+            <label>Quantity:</label><input type="number" name="quantity" value="{{ prod[4] }}" min="1" required><br>
+            <label>Status:</label>
+            <select name="status" required>
+                <option value="Completed" {% if prod[5]=='Completed' %}selected{% endif %}>Completed</option>
+                <option value="In Progress" {% if prod[5]=='In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Pending" {% if prod[5]=='Pending' %}selected{% endif %}>Pending</option>
+            </select><br>
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('dashboard') }}">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
