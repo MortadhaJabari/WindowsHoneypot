@@ -39,7 +39,7 @@ def run_admin_app(port=6000):
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'changeme')
 
-    @app.route('/admin/login', methods=['GET', 'POST'])
+    @app.route('/secret-admin/9595', methods=['GET', 'POST'])
     def login():
         error = None
         if request.method == 'POST':
@@ -74,12 +74,11 @@ def run_admin_app(port=6000):
                 ssh_status = data.get('ssh', 'unknown')
                 ftp_status = data.get('ftp', 'unknown')
                 dns_status = data.get('dns', 'unknown')
-                smb_status = data.get('smb', 'unknown')
                 web_status = data.get('web', 'unknown')
         except Exception:
             pass
         return render_template('logs.html', log_files=get_log_files(),
-            ssh_status=ssh_status, ftp_status=ftp_status, dns_status=dns_status, smb_status=smb_status, web_status=web_status)
+            ssh_status=ssh_status, ftp_status=ftp_status, dns_status=dns_status, web_status=web_status)
 
     @app.route('/admin/logs/<logfile>')
     def view_log(logfile):

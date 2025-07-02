@@ -16,7 +16,7 @@ class Logger:
         json_format = '{{"timestamp": "{time:YYYY-MM-DD HH:mm:ss}", "level": "{level}", "service": "{extra[service]}", "message": "{message}"}}'
         logger.add("logs/ssh_honeypot.log", rotation="1 MB", filter=lambda record: record["extra"].get("service") == "ssh", format=json_format)
         logger.add("logs/dns_honeypot.log", rotation="1 MB", filter=lambda record: record["extra"].get("service") == "dns", format=json_format)
-        logger.add("logs/smb_honeypot.log", rotation="1 MB", filter=lambda record: record["extra"].get("service") == "smb", format=json_format)
+
         logger.add("logs/ftp_honeypot.log", rotation="1 MB", filter=lambda record: record["extra"].get("service") == "ftp", format=json_format)
         logger.add("logs/web_honeypot.log", rotation="1 MB", filter=lambda record: record["extra"].get("service") == "web", format=json_format)
 
@@ -25,8 +25,6 @@ class Logger:
             self.ssh_logger.info(msg)
         elif service == "dns":
             self.dns_logger.info(msg)
-        elif service == "smb":
-            self.smb_logger.info(msg)
         elif service == "ftp":
             self.ftp_logger.info(msg)
         elif service == "web":
@@ -37,8 +35,6 @@ class Logger:
             self.ssh_logger.warning(msg)
         elif service == "dns":
             self.dns_logger.warning(msg)
-        elif service == "smb":
-            self.smb_logger.warning(msg)
         elif service == "ftp":
             self.ftp_logger.warning(msg)
         elif service == "web":
@@ -49,8 +45,6 @@ class Logger:
             self.ssh_logger.error(msg)
         elif service == "dns":
             self.dns_logger.error(msg)
-        elif service == "smb":
-            self.smb_logger.error(msg)
         elif service == "ftp":
             self.ftp_logger.error(msg)
         elif service == "web":

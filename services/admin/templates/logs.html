@@ -54,14 +54,6 @@
                 <button type="submit" class="stopped" {% if dns_status == 'stopped' %}disabled{% endif %}>Stop</button>
             </form>
             <br><br>
-            <span>SMB Service Status: <span class="status-{{ smb_status }}">{{ smb_status|capitalize }}</span></span>
-            <form method="post" action="{{ url_for('control_smb', action='start') }}" style="display:inline;">
-                <button type="submit" class="running" {% if smb_status == 'running' %}disabled{% endif %}>Start</button>
-            </form>
-            <form method="post" action="{{ url_for('control_smb', action='stop') }}" style="display:inline;">
-                <button type="submit" class="stopped" {% if smb_status == 'stopped' %}disabled{% endif %}>Stop</button>
-            </form>
-            <br><br>
             <span>Web Service Status: <span class="status-{{ web_status }}">{{ web_status|capitalize }}</span></span>
             <form method="post" action="{{ url_for('control_web', action='start') }}" style="display:inline;">
                 <button type="submit" class="running" {% if web_status == 'running' %}disabled{% endif %}>Start</button>

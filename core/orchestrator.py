@@ -4,7 +4,6 @@ import os
 import time
 from services.ssh import ssh_service
 from services.dns import dns_service
-from services.smb.smb_service import start_smb_server
 from services.ftp.ftp_service import start_ftp_server
 from services.web.web_honeypot import app as web_app
 from services.web.init_pms_db import PMSDatabaseInitializer

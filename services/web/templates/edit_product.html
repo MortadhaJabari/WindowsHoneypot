@@ -6,21 +6,22 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <h2>Edit Car Cabling Product</h2>
+        <h2>Edit Product</h2>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
-        <form method="post">
-            <label>Reference:</label><input type="text" name="reference" value="{{ prod[1] }}" required><br>
-            <label>Family:</label><input type="text" name="family" value="{{ prod[2] }}" required><br>
-            <label>Product:</label><input type="text" name="product" value="{{ prod[3] }}" required><br>
-            <label>Quantity:</label><input type="number" name="quantity" value="{{ prod[4] }}" min="1" required><br>
-            <label>Status:</label>
-            <select name="status" required>
-                <option value="Completed" {% if prod[5]=='Completed' %}selected{% endif %}>Completed</option>
-                <option value="In Progress" {% if prod[5]=='In Progress' %}selected{% endif %}>In Progress</option>
-                <option value="Pending" {% if prod[5]=='Pending' %}selected{% endif %}>Pending</option>
-            </select><br>
-            <button type="submit">Save Changes</button>
-            <a href="{{ url_for('dashboard') }}">Cancel</a>
+        <form method="post" class="crud-form">
+            <label>Reference:<input type="text" name="reference" value="{{ product[1] }}" required></label><br>
+            <label>Family:<input type="text" name="family" value="{{ product[2] }}" required></label><br>
+            <label>Product:<input type="text" name="product" value="{{ product[3] }}" required></label><br>
+            <label>Quantity:<input type="number" name="quantity" value="{{ product[4] }}" min="1" required></label><br>
+            <label>Status:
+                <select name="status" required>
+                    <option value="Completed" {% if product[5]=='Completed' %}selected{% endif %}>Completed</option>
+                    <option value="In Progress" {% if product[5]=='In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Pending" {% if product[5]=='Pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </label><br>
+            <button class="button save" type="submit">Save Changes</button>
+            <a class="button cancel" href="{{ url_for('dashboard') }}">Cancel</a>
         </form>
     </div>
 </body>

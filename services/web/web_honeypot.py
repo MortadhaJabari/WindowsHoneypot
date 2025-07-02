@@ -80,6 +80,74 @@ def dashboard():
     conn.close()
     return render_template('dashboard.html', data=data)
 
+# CRUD: Add Product
+@app.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    error = None
+    if request.method == 'POST':
+        reference = request.form.get('reference')
+        family = request.form.get('family')
+        product = request.form.get('product')
+        quantity = request.form.get('quantity')
+        status = request.form.get('status')
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute("INSERT INTO production (reference, family, product, quantity, status) VALUES (?, ?, ?, ?, ?)",
+                      (reference, family, product, quantity, status))
+            conn.commit()
+            conn.close()
+            logger.info(f"WEB product added: {reference} - {product}", service="web")
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            error = str(e)
+    return render_template('add_product.html', error=error)
+
+# CRUD: Edit Product
+@app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT * FROM production WHERE id = ?", (product_id,))
+    product = c.fetchone()
+    error = None
+    if request.method == 'POST':
+        reference = request.form.get('reference')
+        family = request.form.get('family')
+        prod = request.form.get('product')
+        quantity = request.form.get('quantity')
+        status = request.form.get('status')
+        try:
+            c.execute("UPDATE production SET reference = ?, family = ?, product = ?, quantity = ?, status = ? WHERE id = ?",
+                      (reference, family, prod, quantity, status, product_id))
+            conn.commit()
+            logger.info(f"WEB product edited: {reference} - {prod}", service="web")
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            error = str(e)
+    conn.close()
+    return render_template('edit_product.html', product=product, error=error)
+
+# CRUD: Delete Product
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("DELETE FROM production WHERE id = ?", (product_id,))
+        conn.commit()
+        conn.close()
+        logger.info(f"WEB product deleted: {product_id}", service="web")
+    except Exception as e:
+        logger.warning(f"WEB product delete failed: {product_id} - {e}", service="web")
+    return redirect(url_for('dashboard'))
+
 @app.route('/logout')
 def logout():
     """Log out the current user."""

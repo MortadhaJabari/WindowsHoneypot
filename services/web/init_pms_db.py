@@ -17,41 +17,43 @@ class PMSDatabaseInitializer:
                 logger.info(f"Opening existing PMS database file at {db_path}", service="web")
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
+        # Drop and recreate users and production tables
+        c.execute('DROP TABLE IF EXISTS users')
+        c.execute('DROP TABLE IF EXISTS production')
         # Create users table
-        c.execute('''CREATE TABLE IF NOT EXISTS users (
+        c.execute('''CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             password TEXT NOT NULL
         )''')
         if logger:
-            logger.info("Created or verified 'users' table in PMS database.", service="web")
-        # Create production table
-        c.execute('''CREATE TABLE IF NOT EXISTS production (
+            logger.info("Created 'users' table in PMS database.", service="web")
+        # Create production table with new schema
+        c.execute('''CREATE TABLE production (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT NOT NULL,
+            family TEXT NOT NULL,
             product TEXT NOT NULL,
             quantity INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            timestamp TEXT NOT NULL
+            status TEXT NOT NULL
         )''')
         if logger:
-            logger.info("Created or verified 'production' table in PMS database.", service="web")
-        # Insert mock users
+            logger.info("Created 'production' table in PMS database.", service="web")
+        # Insert users from config
         web_users = config['services']['web'].get('users', [])
-        c.execute("DELETE FROM users")
         for user in web_users:
             c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (user['username'], user['password']))
             if logger:
                 logger.info(f"Inserted user: {user['username']}", service="web")
         # Insert mock production data
-        c.execute("DELETE FROM production")
         prod_data = [
-            ('Widget A', 120, 'Completed', '2025-06-27 08:30:00'),
-            ('Widget B', 75, 'In Progress', '2025-06-27 09:15:00'),
-            ('Widget C', 200, 'Completed', '2025-06-27 10:00:00'),
-            ('Widget D', 50, 'Pending', '2025-06-27 10:45:00'),
+            ('REF001', 'FamilyA', 'Widget A', 120, 'Completed'),
+            ('REF002', 'FamilyB', 'Widget B', 75, 'In Progress'),
+            ('REF003', 'FamilyC', 'Widget C', 200, 'Completed'),
+            ('REF004', 'FamilyD', 'Widget D', 50, 'Pending'),
         ]
         for p in prod_data:
-            c.execute("INSERT INTO production (product, quantity, status, timestamp) VALUES (?, ?, ?, ?)", p)
+            c.execute("INSERT INTO production (reference, family, product, quantity, status) VALUES (?, ?, ?, ?, ?)", p)
             if logger:
                 logger.info(f"Inserted production record: {p}", service="web")
         conn.commit()
