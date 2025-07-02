@@ -3,11 +3,14 @@
 A multi-service honeypot for Windows and Linux, simulating SSH, FTP, DNS, SMB, and a vulnerable web application for research and monitoring purposes.
 
 ## Features
-- SSH, FTP, DNS, SMB, and Web honeypot services
-- Admin panel for monitoring
-- Centralized logging
-- Modular and extensible architecture
-- Designed for research, detection, and deception
+- **SSH Honeypot:** Simulates an SSH server to capture login attempts and attacker behavior.
+- **FTP Honeypot:** Emulates an FTP server, logging file access and credentials.
+- **DNS Honeypot:** Responds to DNS queries and logs suspicious or unexpected requests.
+- **Web Honeypot:** Runs a vulnerable web application (with fake login, dashboard, and CRUD) to attract and analyze web attacks.
+- **Admin Panel:** Web-based interface for monitoring logs and managing the honeypot.
+- **Centralized Logging:** All service activity is logged for analysis and alerting.
+- **Modular and Extensible:** Easily enable/disable or extend services via configuration.
+- **Designed for Research & Detection:** Useful for threat intelligence, deception, and security education.
 
 ## Quick Start
 
