@@ -1,1 +1,1 @@
-{"ssh_desired": "running", "ssh": "stopped", "ftp_desired": "running", "ftp": "stopped", "dns_desired": "running", "dns": "stopped", "web": "running"}
+{"web": "running", "ssh": "stopped", "ftp": "stopped", "dns": "stopped", "ssh_desired": "running", "ftp_desired": "running", "dns_desired": "running"}

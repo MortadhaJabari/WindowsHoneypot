@@ -30,7 +30,7 @@
         <div class="service-controls" style="margin-bottom: 32px; border-bottom: 2px solid #444; padding-bottom: 18px;">
             <!-- Service Control Section -->
             <h3>Service Control</h3>
-            <span>SSH Service Status: <span class="status-{{ ssh_status }}">{{ ssh_status|capitalize }}</span></span>
+            <span>SSH Service Status: <span id="ssh-status" class="status-{{ ssh_status }}">{{ ssh_status|capitalize }}</span></span>
             <form method="post" action="{{ url_for('control_ssh', action='start') }}" style="display:inline;">
                 <button type="submit" class="running" {% if ssh_status == 'running' %}disabled{% endif %}>Start</button>
             </form>
@@ -38,7 +38,7 @@
                 <button type="submit" class="stopped" {% if ssh_status == 'stopped' %}disabled{% endif %}>Stop</button>
             </form>
             <br><br>
-            <span>FTP Service Status: <span class="status-{{ ftp_status }}">{{ ftp_status|capitalize }}</span></span>
+            <span>FTP Service Status: <span id="ftp-status" class="status-{{ ftp_status }}">{{ ftp_status|capitalize }}</span></span>
             <form method="post" action="{{ url_for('control_ftp', action='start') }}" style="display:inline;">
                 <button type="submit" class="running" {% if ftp_status == 'running' %}disabled{% endif %}>Start</button>
             </form>
@@ -46,7 +46,7 @@
                 <button type="submit" class="stopped" {% if ftp_status == 'stopped' %}disabled{% endif %}>Stop</button>
             </form>
             <br><br>
-            <span>DNS Service Status: <span class="status-{{ dns_status }}">{{ dns_status|capitalize }}</span></span>
+            <span>DNS Service Status: <span id="dns-status" class="status-{{ dns_status }}">{{ dns_status|capitalize }}</span></span>
             <form method="post" action="{{ url_for('control_dns', action='start') }}" style="display:inline;">
                 <button type="submit" class="running" {% if dns_status == 'running' %}disabled{% endif %}>Start</button>
             </form>
@@ -54,7 +54,7 @@
                 <button type="submit" class="stopped" {% if dns_status == 'stopped' %}disabled{% endif %}>Stop</button>
             </form>
             <br><br>
-            <span>Web Service Status: <span class="status-{{ web_status }}">{{ web_status|capitalize }}</span></span>
+            <span>Web Service Status: <span id="web-status" class="status-{{ web_status }}">{{ web_status|capitalize }}</span></span>
             <form method="post" action="{{ url_for('control_web', action='start') }}" style="display:inline;">
                 <button type="submit" class="running" {% if web_status == 'running' %}disabled{% endif %}>Start</button>
             </form>
@@ -72,8 +72,21 @@
           {% endfor %}
         </ul>
         <script>
-        // Auto-refresh the dashboard every 5 seconds
-        setTimeout(function() { window.location.reload(); }, 1000);
+        // Real-time update using SSE for service status
+        const evtSource = new EventSource("/admin/events");
+        evtSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            function updateStatus(id, status) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.className = "status-" + status;
+                el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+            if (data.ssh) updateStatus("ssh-status", data.ssh);
+            if (data.ftp) updateStatus("ftp-status", data.ftp);
+            if (data.dns) updateStatus("dns-status", data.dns);
+            if (data.web) updateStatus("web-status", data.web);
+        };
         </script>
     </div>
 </body>

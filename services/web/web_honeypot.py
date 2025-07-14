@@ -6,7 +6,10 @@ It supports blocking/unblocking access via a global flag, and logs all activity.
 """
 import os
 import sqlite3
-from flask import Flask, request, render_template, redirect, url_for, session, g
+from flask import Flask, request, render_template, redirect, url_for, session, g, Response
+import time
+# --- Server-Sent Events (SSE) endpoint for real-time dashboard updates ---
+
 from datetime import datetime, timedelta
 from core.logger import Logger
 import json

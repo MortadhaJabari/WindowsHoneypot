@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, abort, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, abort, make_response, Response
 import os
 from dotenv import load_dotenv
 import re
 import json
+import time
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -251,6 +252,27 @@ def run_admin_app(port=6000):
         except Exception:
             pass
         return redirect(url_for('dashboard'))
+
+    # --- SSE endpoint for real-time service status updates ---
+    @app.route('/admin/events')
+    def admin_events():
+        def event_stream():
+            last_status = None
+            status_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../logs/service_status.json'))
+            while True:
+                try:
+                    if os.path.exists(status_file):
+                        with open(status_file, 'r') as f:
+                            data = json.load(f)
+                    else:
+                        data = {}
+                except Exception:
+                    data = {}
+                if data != last_status:
+                    yield f"data: {json.dumps(data)}\n\n"
+                    last_status = data.copy() if isinstance(data, dict) else data
+                time.sleep(2)
+        return Response(event_stream(), mimetype="text/event-stream")
 
     def get_log_files():
         try:
