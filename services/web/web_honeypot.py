@@ -19,6 +19,9 @@ from flask import make_response
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # For session management (not secure, but fine for honeypot)
+app.permanent_session_lifetime = timedelta(hours=6)  # Sessions last 6 hours
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
 logger = Logger()
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'pms.db')
@@ -66,6 +69,7 @@ def login():
         if user:
             logger.info(f"WEB login success for '{username}' from {ip}", service="web")
             session['user'] = username
+            session.permanent = True  # Make session permanent
             return redirect(url_for('dashboard'))
         logger.warning(f"WEB login failed for '{username}' from {ip}", service="web")
         error = 'Invalid credentials.'
