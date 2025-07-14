@@ -81,6 +81,12 @@
                 if (!el) return;
                 el.className = "status-" + status;
                 el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                // Enable/disable buttons for this service
+                const service = id.split('-')[0];
+                const startBtn = document.querySelector(`form[action$='${service}/start'] button`);
+                const stopBtn = document.querySelector(`form[action$='${service}/stop'] button`);
+                if (startBtn) startBtn.disabled = (status === 'running');
+                if (stopBtn) stopBtn.disabled = (status === 'stopped');
             }
             if (data.ssh) updateStatus("ssh-status", data.ssh);
             if (data.ftp) updateStatus("ftp-status", data.ftp);
